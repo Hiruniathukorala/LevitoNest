@@ -19,7 +19,7 @@ const Logo = () => (
   </div>
 );
 
-const Navbar = () => {
+const Navbar = ({ onGetStarted }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -55,7 +55,9 @@ const Navbar = () => {
               {link.name}
             </a>
           ))}
-          <button className={`px-6 py-2.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 ${isScrolled ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:bg-opacity-90' : 'bg-white text-darkText hover:bg-secondary'}`}>
+          <button
+            onClick={onGetStarted}
+            className={`px-6 py-2.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 ${isScrolled ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:bg-opacity-90' : 'bg-white text-darkText hover:bg-secondary'}`}>
             Get Started
           </button>
         </div>
@@ -91,7 +93,9 @@ const Navbar = () => {
                   {link.name}
                 </a>
               ))}
-              <button className="bg-primary text-white py-3 rounded-xl font-medium mt-4">
+              <button
+                onClick={onGetStarted}
+                className="bg-primary text-white py-3 rounded-xl font-medium mt-4">
                 Get Started
               </button>
             </div>
