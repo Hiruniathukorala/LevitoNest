@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as fabric from 'fabric';
 import { HexColorPicker } from 'react-colorful';
 import { getFurniture, createRoom, createDesign, updateDesign } from '../api';
+import View3D from './View3D';
 
 const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) => {
   const canvasRef = useRef(null);
@@ -13,6 +14,7 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
   const [designName, setDesignName] = useState(existingDesign?.name || 'New Design');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [show3D, setShow3D] = useState(false);
   const [activeTab, setActiveTab] = useState('furniture');
   const [showRoomSetup, setShowRoomSetup] = useState(!existingDesign);
   const [roomData, setRoomData] = useState({
@@ -63,18 +65,14 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
     });
 
     fabricRef.current = canvas;
-
-    // Draw room grid
     drawGrid(canvas);
 
-    // Load existing items if editing
     if (existingDesign?.items?.length > 0) {
       existingDesign.items.forEach(item => {
         addFurnitureToCanvas(item.furniture, item.x, item.y, item.width, item.height, item.color, item.angle);
       });
     }
 
-    // Track selected object
     canvas.on('selection:created', (e) => {
       setSelectedObject(e.selected[0]);
       setCurrentColor(e.selected[0].fill || '#8B4513');
@@ -154,7 +152,6 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
       angle: angle || 0,
     });
 
-    // Center text in rect
     text.set({
       left: rect.width / 2 - text.width / 2,
       top: rect.height / 2 - text.height / 2,
@@ -209,7 +206,6 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
       const objects = selectedObject.type === 'group'
         ? selectedObject.getObjects()
         : [selectedObject];
-
       objects.forEach(obj => {
         if (obj.type === 'rect') {
           obj.set('shadow', new fabric.Shadow({
@@ -229,7 +225,6 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
       const objects = selectedObject.type === 'group'
         ? selectedObject.getObjects()
         : [selectedObject];
-
       objects.forEach(obj => {
         obj.set('shadow', null);
       });
@@ -289,12 +284,22 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
     }
   };
 
-  // Group furniture by type
   const furnitureByType = furniture.reduce((acc, item) => {
     if (!acc[item.type]) acc[item.type] = [];
     acc[item.type].push(item);
     return acc;
   }, {});
+
+  // 3D View
+  if (show3D) {
+    return (
+      <View3D
+        design={{ name: designName, items: getCanvasItems() }}
+        room={currentRoom}
+        onClose={() => setShow3D(false)}
+      />
+    );
+  }
 
   // Room Setup Screen
   if (showRoomSetup) {
@@ -430,6 +435,12 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
             </span>
           )}
           <button
+            onClick={() => setShow3D(true)}
+            className="px-6 py-2 bg-darkText text-white rounded-full font-poppins text-sm hover:bg-opacity-90 transition-all"
+          >
+            View in 3D
+          </button>
+          <button
             onClick={handleSaveDesign}
             disabled={saving}
             className="px-6 py-2 bg-primary text-white rounded-full font-poppins text-sm hover:bg-opacity-90 transition-all"
@@ -442,7 +453,6 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel */}
         <div className="w-64 bg-white shadow-sm flex flex-col overflow-y-auto">
-          {/* Tabs */}
           <div className="flex border-b border-gray-100">
             <button
               onClick={() => setActiveTab('furniture')}
@@ -458,7 +468,6 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
             </button>
           </div>
 
-          {/* Furniture Tab */}
           {activeTab === 'furniture' && (
             <div className="p-3 space-y-4">
               {Object.entries(furnitureByType).map(([type, items]) => (
@@ -485,7 +494,6 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
             </div>
           )}
 
-          {/* Room Tab */}
           {activeTab === 'room' && (
             <div className="p-4 space-y-4">
               <div>
@@ -513,7 +521,6 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
           <h3 className="font-poppins font-semibold text-gray-700 text-sm">
             Selected Item
           </h3>
-
           {selectedObject ? (
             <>
               <div>
@@ -534,28 +541,24 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
                   </div>
                 )}
               </div>
-
               <button
                 onClick={handleRotate}
                 className="w-full py-2 bg-gray-100 text-gray-700 rounded-xl font-poppins text-sm hover:bg-gray-200 transition-all"
               >
                 Rotate 90°
               </button>
-
               <button
                 onClick={handleApplyShading}
                 className="w-full py-2 bg-gray-100 text-gray-700 rounded-xl font-poppins text-sm hover:bg-gray-200 transition-all"
               >
                 Apply Shading
               </button>
-
               <button
                 onClick={handleRemoveShading}
                 className="w-full py-2 bg-gray-100 text-gray-700 rounded-xl font-poppins text-sm hover:bg-gray-200 transition-all"
               >
                 Remove Shading
               </button>
-
               <button
                 onClick={handleDeleteSelected}
                 className="w-full py-2 bg-red-50 text-red-500 rounded-xl font-poppins text-sm hover:bg-red-100 transition-all"
