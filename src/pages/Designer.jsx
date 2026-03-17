@@ -58,11 +58,13 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
   };
 
   const initCanvas = () => {
-    const canvas = new fabric.Canvas(canvasRef.current, {
-      width: currentRoom?.width || 600,
-      height: currentRoom?.height || 500,
-      backgroundColor: currentRoom?.color || '#f5f5f0',
-    });
+const canvas = new fabric.Canvas(canvasRef.current, {
+  width: currentRoom?.width || 500,
+  height: currentRoom?.height || 400,
+  backgroundColor: currentRoom?.color || '#f5f5f0',
+});
+
+    
 
     fabricRef.current = canvas;
     drawGrid(canvas);
@@ -114,8 +116,8 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
     const canvas = fabricRef.current;
     if (!canvas) return;
 
-    const width = w || item.default_width;
-    const height = h || item.default_height;
+  const width = w || item.default_width;
+const height = h || item.default_height;
     const fillColor = color || item.color || '#8B4513';
 
     const rect = new fabric.Rect({
@@ -232,19 +234,23 @@ const Designer = ({ designer, existingDesign, rooms, onClose, onRoomsUpdate }) =
     }
   };
 
-  const getCanvasItems = () => {
+const getCanvasItems = () => {
     if (!fabricRef.current) return [];
     return fabricRef.current.getObjects()
       .filter(obj => obj.type === 'group' && obj.furnitureData)
-      .map(obj => ({
-        furniture: obj.furnitureData,
-        x: obj.left,
-        y: obj.top,
-        width: obj.width,
-        height: obj.height,
-        color: obj.getObjects()[0]?.fill,
-        angle: obj.angle
-      }));
+      .map(obj => {
+        // Use original furniture dimensions, not scaled canvas dimensions
+        const furnitureData = obj.furnitureData;
+        return {
+          furniture: furnitureData,
+          x: obj.left,
+          y: obj.top,
+          width: furnitureData.default_width,
+          height: furnitureData.default_height,
+          color: obj.getObjects()[0]?.fill,
+          angle: obj.angle
+        };
+      });
   };
 
   const handleCreateRoom = async () => {
